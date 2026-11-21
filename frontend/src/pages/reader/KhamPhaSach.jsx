@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import TheSach from '../../components/dungChung/TheSach';
@@ -17,6 +17,40 @@ const KhamPhaSach = () => {
   const maTheLoai = searchParams.get('ma_the_loai') || '';
   const sapXep = searchParams.get('sap_xep') || 'moi_nhat';
   const trang = parseInt(searchParams.get('trang'), 10) || 1;
+
+  const [tuKhoaInput, setTuKhoaInput] = useState(tuKhoa);
+  const dangGoIME = useRef(false);
+
+  // Đồng bộ lại ô nhập nếu từ khóa trên URL thay đổi từ thanh tìm kiếm Header
+  useEffect(() => {
+    setTuKhoaInput(tuKhoa);
+  }, [tuKhoa]);
+
+  const apDungTuKhoaLenUrl = (giaTri) => {
+    const tuKhoaSach = giaTri.trim();
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (tuKhoaSach) next.set('tu_khoa', tuKhoaSach);
+        else next.delete('tu_khoa');
+        next.set('trang', '1');
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
+  // Chờ người dùng gõ xong tiếng Việt (350ms) mới cập nhật URL tìm kiếm
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (dangGoIME.current) return;
+      if (tuKhoaInput.trim() !== tuKhoa) {
+        apDungTuKhoaLenUrl(tuKhoaInput);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [tuKhoaInput]);
 
   useEffect(() => {
     axiosClient.get('/danh-muc/the-loai').then((res) => setDsTheLoai(res.du_lieu || [])).catch(() => {});
@@ -49,11 +83,13 @@ const KhamPhaSach = () => {
   }, [tuKhoa, loaiSach, hinhThucBan, maTheLoai, sapXep, trang]);
 
   const capNhatBoLoc = (truong, giaTri) => {
-    const next = new URLSearchParams(searchParams);
-    if (giaTri) next.set(truong, giaTri);
-    else next.delete(truong);
-    if (truong !== 'trang') next.set('trang', '1');
-    setSearchParams(next);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (giaTri) next.set(truong, giaTri);
+      else next.delete(truong);
+      if (truong !== 'trang') next.set('trang', '1');
+      return next;
+    });
   };
 
   return (
@@ -63,8 +99,21 @@ const KhamPhaSach = () => {
           type="text"
           className="input-crystal"
           placeholder="Nhập tên sách hoặc tác giả..."
-          value={tuKhoa}
-          onChange={(e) => capNhatBoLoc('tu_khoa', e.target.value)}
+          value={tuKhoaInput}
+          onCompositionStart={() => {
+            dangGoIME.current = true;
+          }}
+          onCompositionEnd={(e) => {
+            dangGoIME.current = false;
+            setTuKhoaInput(e.currentTarget.value);
+          }}
+          onChange={(e) => setTuKhoaInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              dangGoIME.current = false;
+              apDungTuKhoaLenUrl(tuKhoaInput);
+            }
+          }}
         />
 
         <select className="input-crystal" value={loaiSach} onChange={(e) => capNhatBoLoc('loai_sach', e.target.value)}>
