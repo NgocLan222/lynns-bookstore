@@ -28,6 +28,15 @@ const tachKhoiVanBan = (html) => {
   return html.split(/\n+/).map((s) => s.trim()).filter(Boolean);
 };
 
+// Tách một đoạn văn thành các câu để highlight từng câu mượt mà
+const tachCauTrongDoan = (htmlDoan) => {
+  if (!htmlDoan) return [];
+  const textSach = htmlDoan.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!textSach) return [];
+  const cauList = textSach.match(/[^.!?…]+[.!?…]+(?:["'”’»\)\]]+)?|[^.!?…]+$/g);
+  return (cauList || [textSach]).map((c) => c.trim()).filter(Boolean);
+};
+
 const TrangDocSach = () => {
   const { id } = useParams();
   const { nguoiDung, capNhatSoDuXu } = useAuth();
@@ -42,8 +51,9 @@ const TrangDocSach = () => {
   const [coChu, setCoChu] = useState(19);
   const [kieuDoc, setKieuDoc] = useState('CUON_DOC');
   const [trangHienTai, setTrangHienTai] = useState(0);
-  const [doanDangPhat, setDoanDangPhat] = useState(-1);
+  const [cauDangPhat, setCauDangPhat] = useState(-1);
   const [tocDo, setTocDo] = useState(1);
+  const [thoiLuongAudio, setThoiLuongAudio] = useState(0);
 
   const audioRef = useRef(null);
 
@@ -51,7 +61,8 @@ const TrangDocSach = () => {
     setDangTai(true);
     setLoiQuyen(null);
     setTrangHienTai(0);
-    setDoanDangPhat(-1);
+    setCauDangPhat(-1);
+    setThoiLuongAudio(0);
     try {
       const res = await axiosClient.get(`/chuong/${id}`);
       setDuLieu(res.du_lieu);
@@ -79,33 +90,86 @@ const TrangDocSach = () => {
 
   const cacKhoiVanBan = useMemo(() => tachKhoiVanBan(duLieu?.chuong?.noi_dung), [duLieu?.chuong?.noi_dung]);
 
+  // Gom toàn bộ chương thành danh sách các câu kèm số thứ tự đoạn gốc
+  const danhSachCau = useMemo(() => {
+    const ds = [];
+    let sttCau = 0;
+    cacKhoiVanBan.forEach((htmlDoan, indexDoan) => {
+      const cacCau = tachCauTrongDoan(htmlDoan);
+      cacCau.forEach((noiDungCau) => {
+        ds.push({
+          id: sttCau,
+          doanIndex: indexDoan,
+          text: noiDungCau,
+          doDai: Math.max(1, noiDungCau.length),
+        });
+        sttCau += 1;
+      });
+    });
+    return ds;
+  }, [cacKhoiVanBan]);
+
+  // Tạo mốc thời gian cho từng câu (ưu tiên moc_thoi_gian_json nếu có, nếu không thì chia đều theo độ dài câu)
+  const mocThoiGianCau = useMemo(() => {
+    if (danhSachCau.length === 0) return [];
+
+    try {
+      const raw = duLieu?.chuong?.moc_thoi_gian_json;
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((m, i) => ({
+          cauId: m.cau ?? m.doan ?? i,
+          bat_dau: Number(m.bat_dau ?? m.thoi_gian ?? 0),
+          ket_thuc: Number(m.ket_thuc ?? thoiLuongAudio ?? 9999),
+        }));
+      }
+    } catch {
+      // Fallback sang tự chia theo thời lượng audio
+    }
+
+    if (!thoiLuongAudio || thoiLuongAudio <= 0) return [];
+    const tongKyTu = danhSachCau.reduce((sum, c) => sum + c.doDai, 0);
+    let batDauTichLuy = 0;
+
+    return danhSachCau.map((cau) => {
+      const thoiGianCau = (cau.doDai / tongKyTu) * thoiLuongAudio;
+      const moc = {
+        cauId: cau.id,
+        bat_dau: batDauTichLuy,
+        ket_thuc: batDauTichLuy + thoiGianCau,
+      };
+      batDauTichLuy += thoiGianCau;
+      return moc;
+    });
+  }, [danhSachCau, duLieu?.chuong?.moc_thoi_gian_json, thoiLuongAudio]);
+
+  // Chia trang cho chế độ Lật trang dựa theo từng câu
   const danhSachTrang = useMemo(() => {
     const pages = [];
     let trangTam = [];
     let kyTuTam = 0;
 
-    cacKhoiVanBan.forEach((html, index) => {
-      const doDai = html.replace(/<[^>]+>/g, '').length;
-      if (kyTuTam + doDai > 1500 && trangTam.length > 0) {
+    danhSachCau.forEach((cau) => {
+      if (kyTuTam + cau.doDai > 1500 && trangTam.length > 0) {
         pages.push(trangTam);
         trangTam = [];
         kyTuTam = 0;
       }
-      trangTam.push({ html, index });
-      kyTuTam += doDai;
+      trangTam.push(cau);
+      kyTuTam += cau.doDai;
     });
     if (trangTam.length > 0) pages.push(trangTam);
     return pages.length > 0 ? pages : [[]];
-  }, [cacKhoiVanBan]);
+  }, [danhSachCau]);
 
-  const mocThoiGian = useMemo(() => {
-    try {
-      const raw = duLieu?.chuong?.moc_thoi_gian_json;
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }, [duLieu?.chuong?.moc_thoi_gian_json]);
+  const nhomTheoDoan = (dsCau) => {
+    const map = new Map();
+    dsCau.forEach((cau) => {
+      if (!map.has(cau.doanIndex)) map.set(cau.doanIndex, []);
+      map.get(cau.doanIndex).push(cau);
+    });
+    return Array.from(map.entries()).map(([doanIndex, cauList]) => ({ doanIndex, cauList }));
+  };
 
   useEffect(() => {
     if (!nguoiDung || !duLieu?.chuong) return;
@@ -129,23 +193,24 @@ const TrangDocSach = () => {
   };
 
   const xuLyDongBoAudio = () => {
-    if (!audioRef.current || mocThoiGian.length === 0) return;
+    if (!audioRef.current || mocThoiGianCau.length === 0) return;
     const giay = audioRef.current.currentTime;
-    const moc = mocThoiGian.find((m) => giay >= m.bat_dau && giay <= m.ket_thuc);
-    if (moc && moc.doan !== doanDangPhat) {
-      setDoanDangPhat(moc.doan);
+    const moc = mocThoiGianCau.find((m) => giay >= m.bat_dau && giay < m.ket_thuc);
+    if (moc && moc.cauId !== cauDangPhat) {
+      setCauDangPhat(moc.cauId);
       if (kieuDoc === 'LAT_TRANG') {
-        const trangChuaDoan = danhSachTrang.findIndex((p) => p.some((item) => item.index === moc.doan));
-        if (trangChuaDoan !== -1) setTrangHienTai(trangChuaDoan);
+        const trangChuaCau = danhSachTrang.findIndex((p) => p.some((item) => item.id === moc.cauId));
+        if (trangChuaCau !== -1) setTrangHienTai(trangChuaCau);
       }
     }
   };
 
-  const tuaAudioToiDoan = (indexDoan) => {
-    if (!audioRef.current || mocThoiGian.length === 0) return;
-    const moc = mocThoiGian.find((m) => m.doan === indexDoan);
+  const tuaAudioToiCau = (cauId) => {
+    if (!audioRef.current || mocThoiGianCau.length === 0) return;
+    const moc = mocThoiGianCau.find((m) => m.cauId === cauId);
     if (moc) {
       audioRef.current.currentTime = moc.bat_dau;
+      setCauDangPhat(cauId);
       audioRef.current.play();
     }
   };
@@ -179,42 +244,21 @@ const TrangDocSach = () => {
 
   const chuong = duLieu?.chuong;
   const maSachQuayLai = chuong?.ma_sach || loiQuyen?.ma_sach;
-  const anhNenTap = chuong?.anh_nen || chuong?.anh_bia;
   const laSachNghe = chuong?.loai_sach === 'SACH_NOI';
   const donViHoa = laSachNghe ? 'Tập' : 'Chương';
   const donViThuong = laSachNghe ? 'tập' : 'chương';
 
-  const quayLaiTrangSach = () => {
-    if (maSachQuayLai) {
-      navigate(`/sach/${maSachQuayLai}`);
-    } else if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/');
-    }
-  };
+  const cacDoanHienThi = nhomTheoDoan(
+    kieuDoc === 'CUON_DOC' ? danhSachCau : (danhSachTrang[trangHienTai] || [])
+  );
 
   return (
-    <div className={`reader-room reader-theme-${nenDoc} ${anhNenTap ? 'has-custom-bg' : ''}`}>
-      {anhNenTap && (
-        <div
-          className="chapter-custom-backdrop"
-          style={{ backgroundImage: `url("${SERVER_URL}${anhNenTap}")` }}
-        />
-      )}
-
+    <div className={`reader-room reader-theme-${nenDoc}`}>
       <div className="reader-topbar">
         <div className="reader-book-meta">
-          {maSachQuayLai ? (
-            <Link to={`/sach/${maSachQuayLai}`} className="control-pill">
-              <ArrowLeft size={16} /> Mục lục
-            </Link>
-          ) : (
-            <button type="button" className="control-pill" onClick={quayLaiTrangSach}>
-              <ArrowLeft size={16} /> Mục lục
-            </button>
-          )}
-
+          <Link to={maSachQuayLai ? `/sach/${maSachQuayLai}` : '/'} className="control-pill">
+            <ArrowLeft size={16} /> Mục lục
+          </Link>
           {chuong && (
             <div>
               <div className="reader-book-title">{chuong.ten_sach}</div>
@@ -288,15 +332,9 @@ const TrangDocSach = () => {
               </button>
             )}
             {loiQuyen.ma_loi === 'CAN_MUA_TRON_QUYEN' && (
-              maSachQuayLai ? (
-                <Link to={`/sach/${maSachQuayLai}`} className="btn-outline">
-                  Quay lại trang thông tin tác phẩm
-                </Link>
-              ) : (
-                <button type="button" className="btn-outline" onClick={quayLaiTrangSach}>
-                  Quay lại trang thông tin tác phẩm
-                </button>
-              )
+              <Link to={maSachQuayLai ? `/sach/${maSachQuayLai}` : '/'} className="btn-outline">
+                Quay lại trang thông tin tác phẩm
+              </Link>
             )}
           </div>
         ) : chuong && (
@@ -377,16 +415,19 @@ const TrangDocSach = () => {
                 <h1 className="chapter-heading">Chương {chuong.so_thu_tu}: {chuong.tieu_de}</h1>
 
                 <div className="chapter-content" style={{ fontSize: `${coChu}px` }}>
-                  {(kieuDoc === 'CUON_DOC'
-                    ? cacKhoiVanBan.map((html, index) => ({ html, index }))
-                    : danhSachTrang[trangHienTai] || []
-                  ).map(({ html, index }) => (
-                    <p
-                      key={index}
-                      className={`${doanDangPhat === index ? 'sync-active' : ''} ${mocThoiGian.length > 0 ? 'sync-clickable' : ''}`}
-                      onClick={() => tuaAudioToiDoan(index)}
-                      dangerouslySetInnerHTML={{ __html: html }}
-                    />
+                  {cacDoanHienThi.map(({ doanIndex, cauList }) => (
+                    <p key={doanIndex}>
+                      {cauList.map((cau, i) => (
+                        <span
+                          key={cau.id}
+                          className={`sync-sentence ${cauDangPhat === cau.id ? 'sync-active' : ''} ${mocThoiGianCau.length > 0 ? 'sync-clickable' : ''}`}
+                          onClick={() => tuaAudioToiCau(cau.id)}
+                        >
+                          {cau.text}
+                          {i < cauList.length - 1 ? ' ' : ''}
+                        </span>
+                      ))}
+                    </p>
                   ))}
                 </div>
 
@@ -472,6 +513,7 @@ const TrangDocSach = () => {
             ref={audioRef}
             controls
             src={`${SERVER_URL}${chuong.duong_dan_audio}`}
+            onLoadedMetadata={() => setThoiLuongAudio(audioRef.current?.duration || 0)}
             onTimeUpdate={xuLyDongBoAudio}
           />
         </div>
