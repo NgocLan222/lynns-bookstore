@@ -1,0 +1,62 @@
+.home-section {
+  margin-top: 44px;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.home-section-title-group h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.home-section-title-group p {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.filter-tabs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-tab-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text-sub);
+  border: 1px solid var(--border-crystal);
+  transition: all 0.15s ease;
+}
+
+.filter-tab-btn.active,
+.filter-tab-btn:hover {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 22px;
+}
+
+.empty-section-box {
+  padding: 36px;
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.95rem;
+}

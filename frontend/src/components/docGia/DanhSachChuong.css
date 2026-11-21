@@ -1,0 +1,63 @@
+.chapter-list-card {
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.chapter-list-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: #e0f2fe;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.chapter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
+}
+
+.chapter-item:hover {
+  background: rgba(224, 242, 254, 0.45);
+}
+
+.chapter-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.chapter-link {
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chapter-link:hover {
+  color: var(--primary-blue);
+}
+
+.chapter-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

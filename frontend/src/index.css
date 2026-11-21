@@ -1,0 +1,155 @@
+:root {
+  --bg-page: #f0f7ff;
+  --bg-glass: rgba(255, 255, 255, 0.84);
+  --bg-glass-strong: rgba(255, 255, 255, 0.95);
+  --border-crystal: #bae6fd;
+  --border-subtle: #e0f2fe;
+
+  --primary-blue: #2563eb;
+  --primary-cyan: #06b6d4;
+  --crystal-gradient: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+  --night-crystal-gradient: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #0284c7 100%);
+
+  --text-main: #0f172a;
+  --text-sub: #475569;
+  --text-muted: #94a3b8;
+
+  --xu-color: #d97706;
+  --xu-bg: #fef3c7;
+  --free-color: #059669;
+  --free-bg: #d1fae5;
+  --full-color: #4f46e5;
+  --full-bg: #e0e7ff;
+  --danger-color: #dc2626;
+
+  --shadow-crystal: 0 8px 30px rgba(14, 116, 144, 0.08);
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  background-color: var(--bg-page);
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.14) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(167, 139, 250, 0.12) 0%, transparent 40%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-crystal);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-crystal);
+}
+
+.btn-crystal {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-crystal:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.28);
+}
+
+.btn-crystal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--primary-blue);
+  border: 1px solid var(--border-crystal);
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-outline:hover {
+  background: #e0f2fe;
+}
+
+.input-crystal {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-crystal);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.input-crystal:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.badge-free {
+  background: var(--free-bg);
+  color: var(--free-color);
+}
+
+.badge-xu {
+  background: var(--xu-bg);
+  color: var(--xu-color);
+}
+
+.badge-full {
+  background: var(--full-bg);
+  color: var(--full-color);
+}

@@ -1,0 +1,317 @@
+.category-tabs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.category-tab-btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: var(--text-sub);
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.category-tab-btn:hover {
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.category-tab-btn.active {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.22);
+}
+
+.tab-count {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.category-tab-btn.active .tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.sub-filter-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filter-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-search-input {
+  max-width: 320px;
+}
+
+.view-toggle-group {
+  display: flex;
+  gap: 6px;
+}
+
+.genre-pill-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.genre-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: var(--text-sub);
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+}
+
+.genre-pill.active,
+.genre-pill:hover {
+  background: #e0f2fe;
+  color: var(--primary-blue);
+  border-color: var(--border-crystal);
+}
+
+.category-group-section {
+  margin-bottom: 24px;
+}
+
+.category-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid #e0f2fe;
+}
+
+.category-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.book-admin-cover {
+  width: 44px;
+  height: 62px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #e0f2fe;
+}
+
+.action-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mini-action-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+.mini-action-btn:hover {
+  background: #f1f5f9;
+}
+
+.book-form-modal {
+  max-width: 620px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.quick-add-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.multi-genre-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border-crystal);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.genre-select-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-sub);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.genre-select-chip.selected {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.book-genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.mini-action-btn.danger {
+  padding: 6px 8px;
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: var(--danger-color);
+}
+
+.mini-action-btn.danger:hover {
+  background: #fee2e2;
+}
+
+.books-admin-table th,
+.books-admin-table td {
+  vertical-align: middle;
+}
+
+.books-admin-table th:nth-child(1),
+.books-admin-table td:nth-child(1) {
+  width: 64px;
+  white-space: nowrap;
+}
+
+/* Giới hạn chiều ngang cột Tên sách & Tác giả để tự xuống dòng khi tên dài */
+.books-admin-table th:nth-child(2),
+.books-admin-table td:nth-child(2) {
+  width: 230px;
+  max-width: 230px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.45;
+}
+
+.books-admin-table th:nth-child(3),
+.books-admin-table td:nth-child(3) {
+  max-width: 170px;
+}
+
+/* Giữ các cột nhãn và nút thao tác luôn thẳng 1 hàng ngang */
+.books-admin-table th:nth-child(3),
+.books-admin-table td:nth-child(3) {
+  width: 200px;
+  max-width: 200px;
+}
+
+.books-admin-table .book-genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 0;
+}
+
+.books-admin-table .book-genre-tags .badge {
+  white-space: nowrap;
+}
+.books-admin-table th:nth-child(4),
+.books-admin-table td:nth-child(4),
+.books-admin-table th:nth-child(5),
+.books-admin-table td:nth-child(5),
+.books-admin-table th:nth-child(6),
+.books-admin-table td:nth-child(6),
+.books-admin-table th:nth-child(7),
+.books-admin-table td:nth-child(7) {
+  white-space: nowrap;
+}
+
+.books-admin-table .action-btn-group {
+  flex-wrap: nowrap;
+}
+.admin-pagination-bar {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+
+.admin-pagination-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-page-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.admin-page-btn.active {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.admin-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

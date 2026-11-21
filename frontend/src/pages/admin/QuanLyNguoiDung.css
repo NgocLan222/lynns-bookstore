@@ -1,0 +1,69 @@
+.user-search-box {
+  max-width: 320px;
+}
+
+.btn-lock {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-lock.danger {
+  background: #fee2e2;
+  color: var(--danger-color);
+}
+
+.btn-lock.success {
+  background: var(--free-bg);
+  color: var(--free-color);
+}
+
+.admin-pagination-bar {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text-sub);
+}
+
+.admin-pagination-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-page-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.admin-page-btn.active {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.admin-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .user-search-box {
+    max-width: 100%;
+    width: 100%;
+  }
+}

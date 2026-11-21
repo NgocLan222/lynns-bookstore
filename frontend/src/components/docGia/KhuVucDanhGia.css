@@ -1,0 +1,231 @@
+.review-card {
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 20px;
+}
+
+.reviewed-notice-box {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: #e0f2fe;
+  border: 1px solid var(--border-crystal);
+  color: var(--primary-blue);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.star-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.star-btn {
+  background: transparent;
+  padding: 2px;
+  display: flex;
+}
+
+.review-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.review-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.review-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.review-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.review-time {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.review-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-crystal);
+  color: var(--primary-blue);
+  transition: all 0.15s ease;
+}
+
+.review-action-btn:hover {
+  background: #e0f2fe;
+}
+
+.review-action-btn.danger {
+  color: var(--danger-color);
+  border-color: #fecaca;
+}
+
+.review-action-btn.danger:hover {
+  background: #fee2e2;
+}
+
+.review-text {
+  color: var(--text-main);
+  font-size: 0.94rem;
+  line-height: 1.6;
+  margin-left: 44px;
+}
+
+.review-edit-box {
+  margin-left: 44px;
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: rgba(240, 249, 255, 0.8);
+  border: 1px solid var(--border-crystal);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reply-form-box {
+  margin-left: 44px;
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.reply-list {
+  margin-left: 44px;
+  margin-top: 12px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border-crystal);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reply-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid #e2e8f0;
+}
+
+.reply-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.reply-item-text {
+  font-size: 0.88rem;
+  color: var(--text-sub);
+  line-height: 1.5;
+}
+.reply-sub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+  background: transparent;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.reply-sub-btn:hover {
+  background: #e0f2fe;
+}
+
+.mention-tag {
+  color: var(--primary-blue);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.highlight-target {
+  animation: pulseCrystalHighlight 2.6s ease;
+  border-radius: 12px;
+}
+
+@keyframes pulseCrystalHighlight {
+  0%, 35% {
+    background-color: rgba(186, 230, 253, 0.65);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .review-text,
+  .review-edit-box,
+  .reply-form-box,
+  .reply-list {
+    margin-left: 0;
+  }
+}

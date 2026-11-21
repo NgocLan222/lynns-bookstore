@@ -1,0 +1,87 @@
+.explore-page {
+  margin-top: 28px;
+}
+
+.explore-filter-bar {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.explore-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.explore-header h1 {
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.explore-count {
+  font-size: 0.9rem;
+  color: var(--text-sub);
+}
+
+.pagination-bar {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-crystal);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.page-btn.active {
+  background: var(--crystal-gradient);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .explore-filter-bar {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .explore-page {
+    margin-top: 16px;
+  }
+
+  .explore-filter-bar {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .explore-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .pagination-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .page-btn {
+    padding: 7px 12px;
+    font-size: 0.84rem;
+  }
+}

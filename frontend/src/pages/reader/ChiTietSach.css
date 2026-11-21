@@ -1,0 +1,133 @@
+.book-detail-page {
+  margin-top: 22px;
+}
+
+.detail-top-bar {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.btn-back-crystal {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border-crystal);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(14, 116, 144, 0.08);
+  transition: all 0.15s ease;
+}
+
+.btn-back-crystal:hover {
+  background: #e0f2fe;
+  color: var(--primary-blue);
+  transform: translateX(-2px);
+}
+
+.book-detail-hero {
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 32px;
+}
+
+.detail-cover {
+  position: relative;
+  padding: 7px;
+  aspect-ratio: 2 / 3;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(224, 242, 254, 0.5));
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 14px 32px rgba(14, 116, 144, 0.18),
+    0 0 0 1px rgba(125, 211, 252, 0.6),
+    inset 0 2px 6px rgba(255, 255, 255, 0.95);
+}
+
+.detail-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.detail-cover::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 12px;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.14) 32%,
+    rgba(255, 255, 255, 0.02) 48%,
+    transparent 49%
+  );
+  pointer-events: none;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 0.92rem;
+  color: var(--text-sub);
+}
+
+.detail-desc {
+  color: var(--text-sub);
+  line-height: 1.65;
+  margin-top: 4px;
+}
+
+.detail-actions {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-heart.liked {
+  background: #fff1f2;
+  border-color: #fda4af;
+  color: #e11d48;
+}
+
+.btn-heart.liked:hover {
+  background: #ffe4e6;
+}
+
+@media (max-width: 768px) {
+  .book-detail-hero {
+    grid-template-columns: 1fr;
+  }
+  .detail-cover {
+    max-width: 220px;
+    margin: 0 auto;
+  }
+}
