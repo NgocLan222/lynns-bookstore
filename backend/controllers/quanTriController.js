@@ -18,10 +18,23 @@ const layNguoiDung = async (req, res) => {
     }
 };
 
+const taoAdmin = async (req, res) => {
+    try {
+        const duLieu = await quanTriService.taoTaiKhoanAdmin(req.nguoiDung, req.body);
+        res.status(201).json({
+            thanh_cong: true,
+            thong_bao: `Đã cấp tài khoản Admin "${duLieu.ten_dang_nhap}" thành công!`,
+            du_lieu: duLieu
+        });
+    } catch (error) {
+        res.status(error.statusCode || 400).json({ thanh_cong: false, thong_bao: error.message });
+    }
+};
+
 const doiTrangThaiNguoiDung = async (req, res) => {
     try {
         await quanTriService.doiTrangThaiNguoiDung(
-            req.nguoiDung.ma_nguoi_dung,
+            req.nguoiDung,
             parseInt(req.params.id, 10),
             req.body.trang_thai
         );
@@ -31,4 +44,4 @@ const doiTrangThaiNguoiDung = async (req, res) => {
     }
 };
 
-module.exports = { layThongKe, layNguoiDung, doiTrangThaiNguoiDung };
+module.exports = { layThongKe, layNguoiDung, taoAdmin, doiTrangThaiNguoiDung };
