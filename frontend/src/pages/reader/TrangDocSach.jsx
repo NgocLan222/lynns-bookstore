@@ -117,7 +117,7 @@ const TrangDocSach = () => {
     return ds;
   }, [cacKhoiVanBan]);
 
-  // Tạo mốc thời gian cho từng câu (ưu tiên moc_thoi_gian_json nếu có, nếu không thì chia theo độ dài câu)
+  // Tạo mốc thời gian liên tục cho từng câu để không bị đứng giữa chừng
   const mocThoiGianCau = useMemo(() => {
     if (danhSachCau.length === 0) return [];
 
@@ -125,29 +125,35 @@ const TrangDocSach = () => {
       const raw = duLieu?.chuong?.moc_thoi_gian_json;
       const parsed = raw ? JSON.parse(raw) : [];
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((m, i) => ({
-          cauId: m.cau ?? m.doan ?? i,
-          bat_dau: Number(m.bat_dau ?? m.thoi_gian ?? 0),
-          ket_thuc: Number(m.ket_thuc ?? thoiLuongAudio ?? 9999),
-        }));
+        const chuanHoa = parsed
+          .map((m, i) => ({
+            cauId: Number(m.cau ?? m.doan ?? i),
+            bat_dau: Number(m.bat_dau ?? m.thoi_gian ?? 0),
+            ket_thuc: Number(m.ket_thuc ?? thoiLuongAudio ?? 99999),
+          }))
+          .filter((m) => Number.isFinite(m.bat_dau))
+          .sort((a, b) => a.bat_dau - b.bat_dau);
+
+        if (chuanHoa.length > 0) return chuanHoa;
       }
     } catch {
-      // Bỏ qua nếu JSON mốc thời gian không hợp lệ
+      // Nếu JSON lỗi hoặc rỗng thì tự chia đều theo độ dài từng câu
     }
 
     if (!thoiLuongAudio || thoiLuongAudio <= 0) return [];
     const tongKyTu = danhSachCau.reduce((sum, c) => sum + c.doDai, 0);
     let batDauTichLuy = 0;
 
-    return danhSachCau.map((cau) => {
+    return danhSachCau.map((cau, idx) => {
       const thoiGianCau = (cau.doDai / tongKyTu) * thoiLuongAudio;
-      const moc = {
+      const batDau = batDauTichLuy;
+      const ketThuc = idx === danhSachCau.length - 1 ? thoiLuongAudio : batDauTichLuy + thoiGianCau;
+      batDauTichLuy = ketThuc;
+      return {
         cauId: cau.id,
-        bat_dau: batDauTichLuy,
-        ket_thuc: batDauTichLuy + thoiGianCau,
+        bat_dau: batDau,
+        ket_thuc: ketThuc,
       };
-      batDauTichLuy += thoiGianCau;
-      return moc;
     });
   }, [danhSachCau, duLieu?.chuong?.moc_thoi_gian_json, thoiLuongAudio]);
 
@@ -204,18 +210,32 @@ const TrangDocSach = () => {
     const player = audioRef.current;
     if (!player) return;
     const thoiLuong = Number.isFinite(player.duration) ? player.duration : Infinity;
-    const mocMoi = Math.min(thoiLuong, Math.max(0, (player.currentTime || 0) + deltaGiay));
-    player.currentTime = mocMoi;
+    player.currentTime = Math.min(thoiLuong, Math.max(0, (player.currentTime || 0) + deltaGiay));
   };
 
   const xuLyDongBoAudio = () => {
     if (!audioRef.current || mocThoiGianCau.length === 0) return;
     const giay = audioRef.current.currentTime;
-    const moc = mocThoiGianCau.find((m) => giay >= m.bat_dau && giay < m.ket_thuc);
-    if (moc && moc.cauId !== cauDangPhat) {
-      setCauDangPhat(moc.cauId);
-      if (kieuDoc === 'LAT_TRANG') {
-        const trangChuaCau = danhSachTrang.findIndex((p) => p.some((item) => item.id === moc.cauId));
+
+    // Lấy mốc mới nhất đã tới thời điểm phát hiện tại để không bị dừng tại biên ket_thuc
+    let mocHienTai = null;
+    for (let i = 0; i < mocThoiGianCau.length; i += 1) {
+      if (giay >= mocThoiGianCau[i].bat_dau) {
+        mocHienTai = mocThoiGianCau[i];
+      } else {
+        break;
+      }
+    }
+
+    const mocCuoi = mocThoiGianCau[mocThoiGianCau.length - 1];
+    const cauMoi = mocHienTai && giay <= (mocCuoi?.ket_thuc ?? Infinity) + 0.25
+      ? mocHienTai.cauId
+      : -1;
+
+    if (cauMoi !== cauDangPhat) {
+      setCauDangPhat(cauMoi);
+      if (cauMoi !== -1 && kieuDoc === 'LAT_TRANG') {
+        const trangChuaCau = danhSachTrang.findIndex((p) => p.some((item) => item.id === cauMoi));
         if (trangChuaCau !== -1) setTrangHienTai(trangChuaCau);
       }
     }
@@ -325,7 +345,7 @@ const TrangDocSach = () => {
             className={`theme-dot ${nenDoc === 'sepia' ? 'active' : ''}`}
             style={{ background: '#f4ecd8' }}
             onClick={() => setNenDoc('sepia')}
-            title="Nền theo tập / giấy cũ"
+            title="Nền giấy cũ"
           />
           <button
             type="button"
