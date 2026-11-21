@@ -24,7 +24,12 @@ const QuanLyGoiNap = () => {
       const res = await axiosClient.get('/quan-tri/goi-nap');
       setDsGoiNap(res.du_lieu || []);
     } catch {
-      setDsGoiNap([]);
+      try {
+        const fallback = await axiosClient.get('/vi-xu/goi-nap');
+        setDsGoiNap(fallback.du_lieu || []);
+      } catch {
+        setDsGoiNap([]);
+      }
     } finally {
       setDangTai(false);
     }
@@ -76,7 +81,7 @@ const QuanLyGoiNap = () => {
       dongForm();
       await taiDanhSach();
     } catch (error) {
-      alert(error.thong_bao || 'Không thể lưu gói nạp Xu.');
+      alert(error.thong_bao || 'Không thể lưu gói nạp Xu (kiểm tra Render đã deploy Backend mới nhất chưa).');
     } finally {
       setDangLuu(false);
     }
@@ -116,7 +121,7 @@ const QuanLyGoiNap = () => {
         <div>
           <h1>Quản lý gói nạp Xu ({dsGoiNap.length})</h1>
           <p style={{ fontSize: '0.86rem', color: 'var(--text-sub)', marginTop: '2px' }}>
-            Thiết lập mệnh giá nạp tiền và số Xu quy đổi hiển thị cho độc giả
+            Thiết lập mệnh giá nạp tiền và số Xu quy đổi hiển thị đồng bộ cho độc giả
           </p>
         </div>
 

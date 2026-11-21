@@ -66,3 +66,9 @@
   border-color: #fecaca;
   color: var(--danger-color);
 }
+
+@media (max-width: 768px) {
+  .package-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
