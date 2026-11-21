@@ -1,0 +1,68 @@
+.package-form-card {
+  margin-bottom: 22px;
+  border: 1px solid var(--border-crystal);
+}
+
+.package-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.package-field label {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-main);
+}
+
+.package-hint {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.package-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pkg-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+.pkg-btn:hover {
+  background: #f1f5f9;
+}
+
+.pkg-btn.warn {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.pkg-btn.ok {
+  background: var(--free-bg);
+  border-color: #bbf7d0;
+  color: var(--free-color);
+}
+
+.pkg-btn.danger {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: var(--danger-color);
+}

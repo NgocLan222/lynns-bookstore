@@ -180,9 +180,126 @@ const doiTrangThaiNguoiDung = async (nguoiThucHien, maNguoiDungMucTieu, trangTha
         .query('UPDATE NguoiDung SET trang_thai = @trang_thai WHERE ma_nguoi_dung = @ma_nguoi_dung');
 };
 
+// ===== QUẢN LÝ GÓI NẠP XU =====
+const layDanhSachGoiNap = async () => {
+    const pool = await poolPromise;
+    const res = await pool.request().query(`
+        SELECT ma_goi, ten_goi, gia_tien_vnd, so_xu_nhan, dang_hoat_dong
+        FROM GoiNapXu
+        ORDER BY gia_tien_vnd ASC, ma_goi ASC
+    `);
+    return res.recordset;
+};
+
+const taoGoiNap = async ({ ten_goi, gia_tien_vnd, so_xu_nhan, dang_hoat_dong }) => {
+    const tenGoi = (ten_goi || '').trim();
+    const giaTien = parseInt(gia_tien_vnd, 10);
+    const soXu = parseInt(so_xu_nhan, 10);
+    const hoatDong = dang_hoat_dong === false || dang_hoat_dong === 0 ? 0 : 1;
+
+    if (!tenGoi || Number.isNaN(giaTien) || giaTien <= 0 || Number.isNaN(soXu) || soXu <= 0) {
+        const err = new Error('Vui lòng nhập tên gói hợp lệ, giá tiền (VNĐ) và số Xu lớn hơn 0.');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const pool = await poolPromise;
+    const res = await pool.request()
+        .input('ten_goi', sql.NVarChar(100), tenGoi)
+        .input('gia_tien_vnd', sql.Int, giaTien)
+        .input('so_xu_nhan', sql.Int, soXu)
+        .input('dang_hoat_dong', sql.Bit, hoatDong)
+        .query(`
+            INSERT INTO GoiNapXu (ten_goi, gia_tien_vnd, so_xu_nhan, dang_hoat_dong)
+            OUTPUT INSERTED.*
+            VALUES (@ten_goi, @gia_tien_vnd, @so_xu_nhan, @dang_hoat_dong)
+        `);
+
+    return res.recordset[0];
+};
+
+const capNhatGoiNap = async (maGoi, { ten_goi, gia_tien_vnd, so_xu_nhan, dang_hoat_dong }) => {
+    const tenGoi = (ten_goi || '').trim();
+    const giaTien = parseInt(gia_tien_vnd, 10);
+    const soXu = parseInt(so_xu_nhan, 10);
+    const hoatDong = dang_hoat_dong === false || dang_hoat_dong === 0 ? 0 : 1;
+
+    if (!tenGoi || Number.isNaN(giaTien) || giaTien <= 0 || Number.isNaN(soXu) || soXu <= 0) {
+        const err = new Error('Vui lòng nhập tên gói hợp lệ, giá tiền (VNĐ) và số Xu lớn hơn 0.');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const pool = await poolPromise;
+    const kq = await pool.request()
+        .input('ma_goi', sql.Int, maGoi)
+        .input('ten_goi', sql.NVarChar(100), tenGoi)
+        .input('gia_tien_vnd', sql.Int, giaTien)
+        .input('so_xu_nhan', sql.Int, soXu)
+        .input('dang_hoat_dong', sql.Bit, hoatDong)
+        .query(`
+            UPDATE GoiNapXu
+            SET ten_goi = @ten_goi,
+                gia_tien_vnd = @gia_tien_vnd,
+                so_xu_nhan = @so_xu_nhan,
+                dang_hoat_dong = @dang_hoat_dong
+            OUTPUT INSERTED.*
+            WHERE ma_goi = @ma_goi
+        `);
+
+    if (kq.recordset.length === 0) {
+        const err = new Error('Không tìm thấy gói nạp Xu.');
+        err.statusCode = 404;
+        throw err;
+    }
+
+    return kq.recordset[0];
+};
+
+const doiTrangThaiGoiNap = async (maGoi, dangHoatDong) => {
+    const pool = await poolPromise;
+    const bitVal = dangHoatDong ? 1 : 0;
+
+    const kq = await pool.request()
+        .input('ma_goi', sql.Int, maGoi)
+        .input('dang_hoat_dong', sql.Bit, bitVal)
+        .query(`
+            UPDATE GoiNapXu
+            SET dang_hoat_dong = @dang_hoat_dong
+            OUTPUT INSERTED.*
+            WHERE ma_goi = @ma_goi
+        `);
+
+    if (kq.recordset.length === 0) {
+        const err = new Error('Không tìm thấy gói nạp Xu.');
+        err.statusCode = 404;
+        throw err;
+    }
+
+    return kq.recordset[0];
+};
+
+const xoaGoiNap = async (maGoi) => {
+    const pool = await poolPromise;
+    const kq = await pool.request()
+        .input('ma_goi', sql.Int, maGoi)
+        .query('DELETE FROM GoiNapXu WHERE ma_goi = @ma_goi');
+
+    if (kq.rowsAffected[0] === 0) {
+        const err = new Error('Không tìm thấy gói nạp Xu để xóa.');
+        err.statusCode = 404;
+        throw err;
+    }
+};
+
 module.exports = {
     layThongKeDashboard,
     layDanhSachNguoiDung,
     taoTaiKhoanAdmin,
-    doiTrangThaiNguoiDung
+    doiTrangThaiNguoiDung,
+    layDanhSachGoiNap,
+    taoGoiNap,
+    capNhatGoiNap,
+    doiTrangThaiGoiNap,
+    xoaGoiNap
 };

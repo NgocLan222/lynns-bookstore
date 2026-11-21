@@ -13,6 +13,7 @@ import DangNhapDangKy from './pages/reader/DangNhapDangKy';
 
 import TongQuanAdmin from './pages/admin/TongQuanAdmin';
 import QuanLySach from './pages/admin/QuanLySach';
+import QuanLyGoiNap from './pages/admin/QuanLyGoiNap';
 import QuanLyNguoiDung from './pages/admin/QuanLyNguoiDung';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           >
             <Route index element={<TongQuanAdmin />} />
             <Route path="sach" element={<QuanLySach />} />
+            <Route path="goi-nap" element={<QuanLyGoiNap />} />
             <Route path="nguoi-dung" element={<QuanLyNguoiDung />} />
           </Route>
         </Routes>

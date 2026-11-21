@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Users, ArrowLeft, Sparkles } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Coins, ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.css';
 
@@ -24,9 +24,13 @@ const AdminLayout = () => {
               <BookOpen size={18} />
               <span>Quản lý Sách & Chương</span>
             </NavLink>
+            <NavLink to="/admin/goi-nap" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+              <Coins size={18} />
+              <span>Quản lý Gói nạp Xu</span>
+            </NavLink>
             <NavLink to="/admin/nguoi-dung" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
               <Users size={18} />
-              <span>Quản lý Độc giả</span>
+              <span>Quản lý Tài khoản</span>
             </NavLink>
           </nav>
         </div>
