@@ -374,3 +374,29 @@
   background-color: rgba(245, 158, 11, 0.35);
   color: #fef3c7;
 }
+
+.chapter-top-nav {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sync-sentence {
+  border-radius: 4px;
+  padding: 1px 3px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sync-active {
+  background-color: rgba(251, 191, 36, 0.42);
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.reader-theme-dark .sync-active {
+  background-color: rgba(245, 158, 11, 0.35);
+  color: #fef3c7;
+}

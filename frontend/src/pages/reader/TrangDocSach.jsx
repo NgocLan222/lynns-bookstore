@@ -18,6 +18,14 @@ import './TrangDocSach.css';
 
 const TOC_DO_PHAT = [0.75, 1, 1.25, 1.5, 2];
 
+const BANG_NEN_TAP = [
+  'linear-gradient(135deg, #e0f2fe 0%, #ede9fe 52%, #fce7f3 100%)',
+  'linear-gradient(135deg, #fef3c7 0%, #ffedd5 50%, #e0f2fe 100%)',
+  'linear-gradient(135deg, #dcfce7 0%, #e0f7fa 50%, #ede9fe 100%)',
+  'linear-gradient(135deg, #fae8ff 0%, #e0e7ff 50%, #cffafe 100%)',
+  'linear-gradient(135deg, #ffe4e6 0%, #fef9c3 50%, #e0f2fe 100%)',
+];
+
 const tachKhoiVanBan = (html) => {
   if (!html) return [];
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -109,7 +117,7 @@ const TrangDocSach = () => {
     return ds;
   }, [cacKhoiVanBan]);
 
-  // Tạo mốc thời gian cho từng câu (ưu tiên moc_thoi_gian_json nếu có, nếu không thì chia đều theo độ dài câu)
+  // Tạo mốc thời gian cho từng câu (ưu tiên moc_thoi_gian_json nếu có, nếu không thì chia theo độ dài câu)
   const mocThoiGianCau = useMemo(() => {
     if (danhSachCau.length === 0) return [];
 
@@ -124,7 +132,7 @@ const TrangDocSach = () => {
         }));
       }
     } catch {
-      // Fallback sang tự chia theo thời lượng audio
+      // Bỏ qua nếu JSON mốc thời gian không hợp lệ
     }
 
     if (!thoiLuongAudio || thoiLuongAudio <= 0) return [];
@@ -142,6 +150,13 @@ const TrangDocSach = () => {
       return moc;
     });
   }, [danhSachCau, duLieu?.chuong?.moc_thoi_gian_json, thoiLuongAudio]);
+
+  // Tự cuộn mượt tới câu đang đọc khi ở chế độ cuộn dọc
+  useEffect(() => {
+    if (cauDangPhat < 0 || kieuDoc !== 'CUON_DOC') return;
+    const el = document.querySelector(`[data-cau-id="${cauDangPhat}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [cauDangPhat, kieuDoc]);
 
   // Chia trang cho chế độ Lật trang dựa theo từng câu
   const danhSachTrang = useMemo(() => {
@@ -189,7 +204,8 @@ const TrangDocSach = () => {
     const player = audioRef.current;
     if (!player) return;
     const thoiLuong = Number.isFinite(player.duration) ? player.duration : Infinity;
-    player.currentTime = Math.min(thoiLuong, Math.max(0, (player.currentTime || 0) + deltaGiay));
+    const mocMoi = Math.min(thoiLuong, Math.max(0, (player.currentTime || 0) + deltaGiay));
+    player.currentTime = mocMoi;
   };
 
   const xuLyDongBoAudio = () => {
@@ -248,12 +264,19 @@ const TrangDocSach = () => {
   const donViHoa = laSachNghe ? 'Tập' : 'Chương';
   const donViThuong = laSachNghe ? 'tập' : 'chương';
 
+  const styleNenPhongNghe = laSachNghe && nenDoc !== 'dark'
+    ? {
+        background: BANG_NEN_TAP[((chuong?.so_thu_tu || 1) - 1) % BANG_NEN_TAP.length],
+        color: '#0f172a',
+      }
+    : undefined;
+
   const cacDoanHienThi = nhomTheoDoan(
     kieuDoc === 'CUON_DOC' ? danhSachCau : (danhSachTrang[trangHienTai] || [])
   );
 
   return (
-    <div className={`reader-room reader-theme-${nenDoc}`}>
+    <div className={`reader-room reader-theme-${nenDoc}`} style={styleNenPhongNghe}>
       <div className="reader-topbar">
         <div className="reader-book-meta">
           <Link to={maSachQuayLai ? `/sach/${maSachQuayLai}` : '/'} className="control-pill">
@@ -302,7 +325,7 @@ const TrangDocSach = () => {
             className={`theme-dot ${nenDoc === 'sepia' ? 'active' : ''}`}
             style={{ background: '#f4ecd8' }}
             onClick={() => setNenDoc('sepia')}
-            title="Nền giấy cũ"
+            title="Nền theo tập / giấy cũ"
           />
           <button
             type="button"
@@ -420,6 +443,7 @@ const TrangDocSach = () => {
                       {cauList.map((cau, i) => (
                         <span
                           key={cau.id}
+                          data-cau-id={cau.id}
                           className={`sync-sentence ${cauDangPhat === cau.id ? 'sync-active' : ''} ${mocThoiGianCau.length > 0 ? 'sync-clickable' : ''}`}
                           onClick={() => tuaAudioToiCau(cau.id)}
                         >
