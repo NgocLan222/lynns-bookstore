@@ -4,35 +4,55 @@ const { sql, poolPromise } = require('../config/db');
 const laAdminChinh = (nguoiDung) =>
     nguoiDung?.ten_dang_nhap === 'admin' || nguoiDung?.ma_nguoi_dung === 2;
 
-const layThongKeDashboard = async (kyHan = '7ngay') => {
+const layThongKeDashboard = async (kyHan = '7_ngay') => {
     const pool = await poolPromise;
 
     const tongQuanRes = await pool.request().query(`
         SELECT
-            (SELECT COUNT(*) FROM Sach) AS tong_dau_sach,
-            (SELECT COUNT(*) FROM ChuongSach) AS tong_chuong,
+            (SELECT COUNT(*) FROM Sach) AS tong_so_sach,
+            (SELECT COUNT(*) FROM ChuongSach) AS tong_so_chuong,
             (SELECT COUNT(*) FROM NguoiDung WHERE vai_tro = 'doc_gia') AS tong_doc_gia,
-            (SELECT ISNULL(SUM(so_tien_vnd), 0) FROM GiaoDichXu WHERE loai_giao_dich = 'NAP_XU' AND trang_thai = 'THANH_CONG') AS tong_doanh_thu_vnd,
-            (SELECT ISNULL(SUM(so_xu), 0) FROM GiaoDichXu WHERE loai_giao_dich = 'NAP_XU' AND trang_thai = 'THANH_CONG') AS tong_xu_da_nap
+            (SELECT ISNULL(SUM(CASE WHEN bien_dong_xu > 0 THEN so_tien_vnd ELSE 0 END), 0) FROM GiaoDichXu WHERE trang_thai = 'THANH_CONG') AS tong_doanh_thu_vnd,
+            (SELECT ISNULL(SUM(CASE WHEN bien_dong_xu < 0 THEN ABS(bien_dong_xu) ELSE 0 END), 0) FROM GiaoDichXu WHERE trang_thai = 'THANH_CONG') AS tong_xu_tieu_thu
     `);
 
     let dieuKienNgay = `AND ngay_tao >= DATEADD(day, -6, CAST(GETDATE() AS DATE))`;
-    if (kyHan === '30ngay') {
+    if (kyHan === '30_ngay') {
         dieuKienNgay = `AND ngay_tao >= DATEADD(day, -29, CAST(GETDATE() AS DATE))`;
-    } else if (kyHan === 'tat_ca') {
-        dieuKienNgay = ``;
+    } else if (kyHan === 'nam_nay') {
+        dieuKienNgay = `AND YEAR(ngay_tao) = YEAR(GETDATE())`;
     }
 
     const bieuDoRes = await pool.request().query(`
         SELECT
-            CONVERT(VARCHAR(10), ngay_tao, 23) AS ngay,
-            ISNULL(SUM(CASE WHEN loai_giao_dich = 'NAP_XU' AND trang_thai = 'THANH_CONG' THEN so_tien_vnd ELSE 0 END), 0) AS doanh_thu_vnd,
-            ISNULL(SUM(CASE WHEN loai_giao_dich = 'NAP_XU' AND trang_thai = 'THANH_CONG' THEN so_xu ELSE 0 END), 0) AS xu_nap,
-            ISNULL(SUM(CASE WHEN loai_giao_dich IN ('MO_KHOA_CHUONG', 'MUA_TRON_QUYEN') AND trang_thai = 'THANH_CONG' THEN ABS(so_xu) ELSE 0 END), 0) AS xu_tieu
+            CONVERT(VARCHAR(10), ngay_tao, 23) AS moc_thoi_gian,
+            ISNULL(SUM(CASE WHEN bien_dong_xu > 0 AND trang_thai = 'THANH_CONG' THEN so_tien_vnd ELSE 0 END), 0) AS doanh_thu_vnd
         FROM GiaoDichXu
         WHERE 1 = 1 ${dieuKienNgay}
         GROUP BY CONVERT(VARCHAR(10), ngay_tao, 23)
-        ORDER BY ngay ASC
+        ORDER BY moc_thoi_gian ASC
+    `);
+
+    const coCauRes = await pool.request().query(`
+        SELECT
+            loai_giao_dich,
+            ISNULL(SUM(ABS(bien_dong_xu)), 0) AS tong_xu
+        FROM GiaoDichXu
+        WHERE bien_dong_xu < 0 AND trang_thai = 'THANH_CONG'
+        GROUP BY loai_giao_dich
+    `);
+
+    const topSachRes = await pool.request().query(`
+        SELECT TOP 5
+            s.ma_sach,
+            s.tieu_de,
+            s.hinh_thuc_ban,
+            ISNULL(s.luot_xem, 0) AS luot_xem,
+            ISNULL(SUM(CASE WHEN gd.bien_dong_xu < 0 AND gd.trang_thai = 'THANH_CONG' THEN ABS(gd.bien_dong_xu) ELSE 0 END), 0) AS doanh_thu_xu
+        FROM Sach s
+        LEFT JOIN GiaoDichXu gd ON s.ma_sach = gd.ma_sach
+        GROUP BY s.ma_sach, s.tieu_de, s.hinh_thuc_ban, s.luot_xem
+        ORDER BY ISNULL(s.luot_xem, 0) DESC, s.ma_sach DESC
     `);
 
     const giaoDichGanDayRes = await pool.request().query(`
@@ -43,9 +63,17 @@ const layThongKeDashboard = async (kyHan = '7ngay') => {
     `);
 
     return {
-        tong_quan: tongQuanRes.recordset[0],
-        bieu_do: bieuDoRes.recordset,
-        giao_dich_gan_day: giaoDichGanDayRes.recordset
+        kpi: tongQuanRes.recordset[0] || {
+            tong_so_sach: 0,
+            tong_so_chuong: 0,
+            tong_doc_gia: 0,
+            tong_doanh_thu_vnd: 0,
+            tong_xu_tieu_thu: 0,
+        },
+        bieu_do_thoi_gian: bieuDoRes.recordset || [],
+        co_cau_xu: coCauRes.recordset || [],
+        top_sach: topSachRes.recordset || [],
+        giao_dich_gan_day: giaoDichGanDayRes.recordset || [],
     };
 };
 
