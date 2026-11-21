@@ -16,6 +16,7 @@ const FORM_ADMIN_MAC_DINH = {
 const QuanLyNguoiDung = () => {
   const { nguoiDung: adminHienTai } = useAuth();
   const [dsNguoiDung, setDsNguoiDung] = useState([]);
+  const [tabDangChon, setTabDangChon] = useState('admin');
   const [tuKhoa, setTuKhoa] = useState('');
   const [dangTai, setDangTai] = useState(true);
   const [trangHienTai, setTrangHienTai] = useState(1);
@@ -45,7 +46,7 @@ const QuanLyNguoiDung = () => {
 
   useEffect(() => {
     setTrangHienTai(1);
-  }, [tuKhoa]);
+  }, [tuKhoa, tabDangChon]);
 
   const xuLyTaoAdmin = async (e) => {
     e.preventDefault();
@@ -55,6 +56,7 @@ const QuanLyNguoiDung = () => {
       alert(res.thong_bao || 'Cấp tài khoản Admin thành công!');
       setFormAdmin(FORM_ADMIN_MAC_DINH);
       setMoFormTaoAdmin(false);
+      setTabDangChon('admin');
       await taiDanhSach();
     } catch (error) {
       alert(error.thong_bao || 'Không thể cấp tài khoản Admin.');
@@ -103,7 +105,7 @@ const QuanLyNguoiDung = () => {
         <div>
           <h1>Quản lý tài khoản ({dsLoc.length})</h1>
           <p style={{ fontSize: '0.86rem', color: 'var(--text-sub)', marginTop: '2px' }}>
-            Quản trị viên: <strong>{dsAdmin.length}</strong> · Độc giả: <strong>{dsDocGia.length}</strong>
+            Phân tách tài khoản Quản trị viên và Độc giả
           </p>
         </div>
 
@@ -120,7 +122,10 @@ const QuanLyNguoiDung = () => {
             <button
               type="button"
               className="btn-crystal"
-              onClick={() => setMoFormTaoAdmin(true)}
+              onClick={() => {
+                setTabDangChon('admin');
+                setMoFormTaoAdmin(true);
+              }}
             >
               <UserPlus size={16} /> Cấp tài khoản Admin
             </button>
@@ -128,7 +133,30 @@ const QuanLyNguoiDung = () => {
         </div>
       </div>
 
-      {moFormTaoAdmin && laAdminChinh && (
+      {/* 2 Tab nằm cạnh nhau */}
+      <div className="user-role-tabs">
+        <button
+          type="button"
+          className={`user-role-tab-btn ${tabDangChon === 'admin' ? 'active' : ''}`}
+          onClick={() => setTabDangChon('admin')}
+        >
+          <Shield size={16} />
+          <span>Quản trị viên</span>
+          <span className="user-tab-badge">{dsAdmin.length}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`user-role-tab-btn ${tabDangChon === 'doc_gia' ? 'active' : ''}`}
+          onClick={() => setTabDangChon('doc_gia')}
+        >
+          <Users size={16} />
+          <span>Độc giả</span>
+          <span className="user-tab-badge">{dsDocGia.length}</span>
+        </button>
+      </div>
+
+      {moFormTaoAdmin && laAdminChinh && tabDangChon === 'admin' && (
         <div className="admin-card" style={{ marginBottom: '20px', border: '1px solid var(--border-crystal)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h2 style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -209,164 +237,156 @@ const QuanLyNguoiDung = () => {
         </div>
       )}
 
-      {/* Bảng 1: Danh sách Quản trị viên */}
-      <div className="admin-card admin-table-wrap" style={{ marginBottom: '22px' }}>
-        <h2 style={{ fontSize: '1.05rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Shield size={18} color="var(--primary-blue)" /> Danh sách Quản trị viên ({dsAdmin.length})
-        </h2>
-
-        {dangTai ? (
-          <p>Đang tải danh sách quản trị viên...</p>
-        ) : dsAdmin.length === 0 ? (
-          <p style={{ color: 'var(--text-sub)' }}>Không tìm thấy tài khoản quản trị viên phù hợp.</p>
-        ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Họ tên</th>
-                <th>Tài khoản / Email</th>
-                <th>Phân cấp</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dsAdmin.map((u) => {
-                const isRootAdmin = u.ten_dang_nhap === 'admin' || u.ma_nguoi_dung === 2;
-                return (
-                  <tr key={u.ma_nguoi_dung}>
-                    <td>#{u.ma_nguoi_dung}</td>
-                    <td style={{ fontWeight: 600 }}>{u.ho_ten}</td>
-                    <td>
-                      <div>{u.ten_dang_nhap}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{u.email}</div>
-                    </td>
-                    <td>
-                      <span className={`badge ${isRootAdmin ? 'badge-xu' : 'badge-full'}`}>
-                        {isRootAdmin ? 'Admin chính' : 'Quản trị viên'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${u.trang_thai === 'HOAT_DONG' ? 'badge-free' : 'badge-xu'}`}>
-                        {u.trang_thai === 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa'}
-                      </span>
-                    </td>
-                    <td>
-                      {laAdminChinh && !isRootAdmin && u.ma_nguoi_dung !== adminHienTai?.ma_nguoi_dung && (
-                        <button
-                          type="button"
-                          className={`btn-lock ${u.trang_thai === 'HOAT_DONG' ? 'danger' : 'success'}`}
-                          onClick={() => doiTrangThai(u)}
-                        >
-                          {u.trang_thai === 'HOAT_DONG' ? <><Lock size={14} /> Khóa</> : <><Unlock size={14} /> Mở khóa</>}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Bảng 2: Danh sách Độc giả */}
-      <div className="admin-card admin-table-wrap">
-        <h2 style={{ fontSize: '1.05rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Users size={18} color="var(--primary-blue)" /> Danh sách Độc giả ({dsDocGia.length})
-        </h2>
-
-        {dangTai ? (
-          <p>Đang tải danh sách độc giả...</p>
-        ) : dsDocGia.length === 0 ? (
-          <p style={{ color: 'var(--text-sub)' }}>Không tìm thấy tài khoản độc giả phù hợp.</p>
-        ) : (
-          <>
+      {tabDangChon === 'admin' ? (
+        <div className="admin-card admin-table-wrap">
+          {dangTai ? (
+            <p>Đang tải danh sách quản trị viên...</p>
+          ) : dsAdmin.length === 0 ? (
+            <p style={{ color: 'var(--text-sub)' }}>Không tìm thấy tài khoản quản trị viên phù hợp.</p>
+          ) : (
             <table className="admin-table">
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Họ tên</th>
                   <th>Tài khoản / Email</th>
-                  <th>Vai trò</th>
-                  <th>Số dư Xu</th>
+                  <th>Phân cấp</th>
                   <th>Trạng thái</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {dsDocGiaHienThi.map((u) => (
-                  <tr key={u.ma_nguoi_dung}>
-                    <td>#{u.ma_nguoi_dung}</td>
-                    <td style={{ fontWeight: 600 }}>{u.ho_ten}</td>
-                    <td>
-                      <div>{u.ten_dang_nhap}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{u.email}</div>
-                    </td>
-                    <td>
-                      <span className="badge badge-free">Độc giả</span>
-                    </td>
-                    <td style={{ fontWeight: 700, color: 'var(--xu-color)' }}>{u.so_du_xu.toLocaleString()} Xu</td>
-                    <td>
-                      <span className={`badge ${u.trang_thai === 'HOAT_DONG' ? 'badge-free' : 'badge-xu'}`}>
-                        {u.trang_thai === 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa'}
-                      </span>
-                    </td>
-                    <td>
-                      {u.ma_nguoi_dung !== adminHienTai?.ma_nguoi_dung && (
-                        <button
-                          type="button"
-                          className={`btn-lock ${u.trang_thai === 'HOAT_DONG' ? 'danger' : 'success'}`}
-                          onClick={() => doiTrangThai(u)}
-                        >
-                          {u.trang_thai === 'HOAT_DONG' ? <><Lock size={14} /> Khóa</> : <><Unlock size={14} /> Mở khóa</>}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {dsAdmin.map((u) => {
+                  const isRootAdmin = u.ten_dang_nhap === 'admin' || u.ma_nguoi_dung === 2;
+                  return (
+                    <tr key={u.ma_nguoi_dung}>
+                      <td>#{u.ma_nguoi_dung}</td>
+                      <td style={{ fontWeight: 600 }}>{u.ho_ten}</td>
+                      <td>
+                        <div>{u.ten_dang_nhap}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{u.email}</div>
+                      </td>
+                      <td>
+                        <span className={`badge ${isRootAdmin ? 'badge-xu' : 'badge-full'}`}>
+                          {isRootAdmin ? 'Admin chính' : 'Quản trị viên'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge ${u.trang_thai === 'HOAT_DONG' ? 'badge-free' : 'badge-xu'}`}>
+                          {u.trang_thai === 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa'}
+                        </span>
+                      </td>
+                      <td>
+                        {laAdminChinh && !isRootAdmin && u.ma_nguoi_dung !== adminHienTai?.ma_nguoi_dung && (
+                          <button
+                            type="button"
+                            className={`btn-lock ${u.trang_thai === 'HOAT_DONG' ? 'danger' : 'success'}`}
+                            onClick={() => doiTrangThai(u)}
+                          >
+                            {u.trang_thai === 'HOAT_DONG' ? <><Lock size={14} /> Khóa</> : <><Unlock size={14} /> Mở khóa</>}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-
-            {tongTrang > 1 && (
-              <div className="admin-pagination-bar">
-                <span>
-                  Hiển thị {batDau + 1}–{Math.min(batDau + dsDocGiaHienThi.length, dsDocGia.length)} / {dsDocGia.length} độc giả
-                </span>
-                <div className="admin-pagination-btns">
-                  <button
-                    type="button"
-                    className="admin-page-btn"
-                    disabled={trangHopLe <= 1}
-                    onClick={() => setTrangHienTai((p) => Math.max(1, p - 1))}
-                  >
-                    Trước
-                  </button>
-                  {Array.from({ length: tongTrang }, (_, idx) => idx + 1).map((so) => (
-                    <button
-                      key={so}
-                      type="button"
-                      className={`admin-page-btn ${so === trangHopLe ? 'active' : ''}`}
-                      onClick={() => setTrangHienTai(so)}
-                    >
-                      {so}
-                    </button>
+          )}
+        </div>
+      ) : (
+        <div className="admin-card admin-table-wrap">
+          {dangTai ? (
+            <p>Đang tải danh sách độc giả...</p>
+          ) : dsDocGia.length === 0 ? (
+            <p style={{ color: 'var(--text-sub)' }}>Không tìm thấy tài khoản độc giả phù hợp.</p>
+          ) : (
+            <>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Họ tên</th>
+                    <th>Tài khoản / Email</th>
+                    <th>Vai trò</th>
+                    <th>Số dư Xu</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dsDocGiaHienThi.map((u) => (
+                    <tr key={u.ma_nguoi_dung}>
+                      <td>#{u.ma_nguoi_dung}</td>
+                      <td style={{ fontWeight: 600 }}>{u.ho_ten}</td>
+                      <td>
+                        <div>{u.ten_dang_nhap}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{u.email}</div>
+                      </td>
+                      <td>
+                        <span className="badge badge-free">Độc giả</span>
+                      </td>
+                      <td style={{ fontWeight: 700, color: 'var(--xu-color)' }}>{u.so_du_xu.toLocaleString()} Xu</td>
+                      <td>
+                        <span className={`badge ${u.trang_thai === 'HOAT_DONG' ? 'badge-free' : 'badge-xu'}`}>
+                          {u.trang_thai === 'HOAT_DONG' ? 'Hoạt động' : 'Bị khóa'}
+                        </span>
+                      </td>
+                      <td>
+                        {u.ma_nguoi_dung !== adminHienTai?.ma_nguoi_dung && (
+                          <button
+                            type="button"
+                            className={`btn-lock ${u.trang_thai === 'HOAT_DONG' ? 'danger' : 'success'}`}
+                            onClick={() => doiTrangThai(u)}
+                          >
+                            {u.trang_thai === 'HOAT_DONG' ? <><Lock size={14} /> Khóa</> : <><Unlock size={14} /> Mở khóa</>}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
                   ))}
-                  <button
-                    type="button"
-                    className="admin-page-btn"
-                    disabled={trangHopLe >= tongTrang}
-                    onClick={() => setTrangHienTai((p) => Math.min(tongTrang, p + 1))}
-                  >
-                    Sau
-                  </button>
+                </tbody>
+              </table>
+
+              {tongTrang > 1 && (
+                <div className="admin-pagination-bar">
+                  <span>
+                    Hiển thị {batDau + 1}–{Math.min(batDau + dsDocGiaHienThi.length, dsDocGia.length)} / {dsDocGia.length} độc giả
+                  </span>
+                  <div className="admin-pagination-btns">
+                    <button
+                      type="button"
+                      className="admin-page-btn"
+                      disabled={trangHopLe <= 1}
+                      onClick={() => setTrangHienTai((p) => Math.max(1, p - 1))}
+                    >
+                      Trước
+                    </button>
+                    {Array.from({ length: tongTrang }, (_, idx) => idx + 1).map((so) => (
+                      <button
+                        key={so}
+                        type="button"
+                        className={`admin-page-btn ${so === trangHopLe ? 'active' : ''}`}
+                        onClick={() => setTrangHienTai(so)}
+                      >
+                        {so}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className="admin-page-btn"
+                      disabled={trangHopLe >= tongTrang}
+                      onClick={() => setTrangHienTai((p) => Math.min(tongTrang, p + 1))}
+                    >
+                      Sau
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

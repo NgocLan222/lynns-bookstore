@@ -12,8 +12,8 @@ const layThongKeDashboard = async (kyHan = '7_ngay') => {
             (SELECT COUNT(*) FROM Sach) AS tong_so_sach,
             (SELECT COUNT(*) FROM ChuongSach) AS tong_so_chuong,
             (SELECT COUNT(*) FROM NguoiDung WHERE vai_tro = 'doc_gia') AS tong_doc_gia,
-            (SELECT ISNULL(SUM(CASE WHEN bien_dong_xu > 0 THEN so_tien_vnd ELSE 0 END), 0) FROM GiaoDichXu WHERE trang_thai = 'THANH_CONG') AS tong_doanh_thu_vnd,
-            (SELECT ISNULL(SUM(CASE WHEN bien_dong_xu < 0 THEN ABS(bien_dong_xu) ELSE 0 END), 0) FROM GiaoDichXu WHERE trang_thai = 'THANH_CONG') AS tong_xu_tieu_thu
+            (SELECT ISNULL(SUM(so_tien_vnd), 0) FROM LichSuGiaoDich WHERE loai_giao_dich = 'NAP_XU' AND trang_thai = 'THANH_CONG') AS tong_doanh_thu_vnd,
+            (SELECT ISNULL(SUM(ABS(bien_dong_xu)), 0) FROM LichSuGiaoDich WHERE loai_giao_dich <> 'NAP_XU' AND trang_thai = 'THANH_CONG') AS tong_xu_tieu_thu
     `);
 
     let dieuKienNgay = `AND ngay_tao >= DATEADD(day, -6, CAST(GETDATE() AS DATE))`;
@@ -26,9 +26,9 @@ const layThongKeDashboard = async (kyHan = '7_ngay') => {
     const bieuDoRes = await pool.request().query(`
         SELECT
             CONVERT(VARCHAR(10), ngay_tao, 23) AS moc_thoi_gian,
-            ISNULL(SUM(CASE WHEN bien_dong_xu > 0 AND trang_thai = 'THANH_CONG' THEN so_tien_vnd ELSE 0 END), 0) AS doanh_thu_vnd
-        FROM GiaoDichXu
-        WHERE 1 = 1 ${dieuKienNgay}
+            ISNULL(SUM(so_tien_vnd), 0) AS doanh_thu_vnd
+        FROM LichSuGiaoDich
+        WHERE loai_giao_dich = 'NAP_XU' AND trang_thai = 'THANH_CONG' ${dieuKienNgay}
         GROUP BY CONVERT(VARCHAR(10), ngay_tao, 23)
         ORDER BY moc_thoi_gian ASC
     `);
@@ -37,8 +37,8 @@ const layThongKeDashboard = async (kyHan = '7_ngay') => {
         SELECT
             loai_giao_dich,
             ISNULL(SUM(ABS(bien_dong_xu)), 0) AS tong_xu
-        FROM GiaoDichXu
-        WHERE bien_dong_xu < 0 AND trang_thai = 'THANH_CONG'
+        FROM LichSuGiaoDich
+        WHERE loai_giao_dich <> 'NAP_XU' AND trang_thai = 'THANH_CONG'
         GROUP BY loai_giao_dich
     `);
 
@@ -48,16 +48,22 @@ const layThongKeDashboard = async (kyHan = '7_ngay') => {
             s.tieu_de,
             s.hinh_thuc_ban,
             ISNULL(s.luot_xem, 0) AS luot_xem,
-            ISNULL(SUM(CASE WHEN gd.bien_dong_xu < 0 AND gd.trang_thai = 'THANH_CONG' THEN ABS(gd.bien_dong_xu) ELSE 0 END), 0) AS doanh_thu_xu
+            (
+                ISNULL((SELECT COUNT(*) FROM SachDaMua sdm WHERE sdm.ma_sach = s.ma_sach), 0) * ISNULL(s.gia_tron_quyen_xu, 0)
+                + ISNULL((
+                    SELECT SUM(ISNULL(c.gia_xu, 0))
+                    FROM ChuongDaMoKhoa cdm
+                    INNER JOIN ChuongSach c ON cdm.ma_chuong = c.ma_chuong
+                    WHERE c.ma_sach = s.ma_sach
+                ), 0)
+            ) AS doanh_thu_xu
         FROM Sach s
-        LEFT JOIN GiaoDichXu gd ON s.ma_sach = gd.ma_sach
-        GROUP BY s.ma_sach, s.tieu_de, s.hinh_thuc_ban, s.luot_xem
         ORDER BY ISNULL(s.luot_xem, 0) DESC, s.ma_sach DESC
     `);
 
     const giaoDichGanDayRes = await pool.request().query(`
         SELECT TOP 10 gd.*, nd.ten_dang_nhap, nd.ho_ten
-        FROM GiaoDichXu gd
+        FROM LichSuGiaoDich gd
         INNER JOIN NguoiDung nd ON gd.ma_nguoi_dung = nd.ma_nguoi_dung
         ORDER BY gd.ngay_tao DESC
     `);
