@@ -36,7 +36,7 @@ const tachKhoiVanBan = (html) => {
   return html.split(/\n+/).map((s) => s.trim()).filter(Boolean);
 };
 
-// Tách một đoạn văn thành các câu để highlight từng câu mượt mà
+// Tách đoạn văn thành từng câu để highlight chạy nối tiếp theo giọng đọc
 const tachCauTrongDoan = (htmlDoan) => {
   if (!htmlDoan) return [];
   const textSach = htmlDoan.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -98,7 +98,6 @@ const TrangDocSach = () => {
 
   const cacKhoiVanBan = useMemo(() => tachKhoiVanBan(duLieu?.chuong?.noi_dung), [duLieu?.chuong?.noi_dung]);
 
-  // Gom toàn bộ chương thành danh sách các câu kèm số thứ tự đoạn gốc
   const danhSachCau = useMemo(() => {
     const ds = [];
     let sttCau = 0;
@@ -117,7 +116,7 @@ const TrangDocSach = () => {
     return ds;
   }, [cacKhoiVanBan]);
 
-  // Tạo mốc thời gian liên tục cho từng câu để không bị đứng giữa chừng
+  // Tính khoảng thời gian [bat_dau, ket_thuc] cho từng câu dựa trên thời lượng audio
   const mocThoiGianCau = useMemo(() => {
     if (danhSachCau.length === 0) return [];
 
@@ -137,7 +136,7 @@ const TrangDocSach = () => {
         if (chuanHoa.length > 0) return chuanHoa;
       }
     } catch {
-      // Nếu JSON lỗi hoặc rỗng thì tự chia đều theo độ dài từng câu
+      // Bỏ qua nếu JSON mốc không hợp lệ
     }
 
     if (!thoiLuongAudio || thoiLuongAudio <= 0) return [];
@@ -157,14 +156,6 @@ const TrangDocSach = () => {
     });
   }, [danhSachCau, duLieu?.chuong?.moc_thoi_gian_json, thoiLuongAudio]);
 
-  // Tự cuộn mượt tới câu đang đọc khi ở chế độ cuộn dọc
-  useEffect(() => {
-    if (cauDangPhat < 0 || kieuDoc !== 'CUON_DOC') return;
-    const el = document.querySelector(`[data-cau-id="${cauDangPhat}"]`);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [cauDangPhat, kieuDoc]);
-
-  // Chia trang cho chế độ Lật trang dựa theo từng câu
   const danhSachTrang = useMemo(() => {
     const pages = [];
     let trangTam = [];
@@ -217,7 +208,6 @@ const TrangDocSach = () => {
     if (!audioRef.current || mocThoiGianCau.length === 0) return;
     const giay = audioRef.current.currentTime;
 
-    // Lấy mốc mới nhất đã tới thời điểm phát hiện tại để không bị dừng tại biên ket_thuc
     let mocHienTai = null;
     for (let i = 0; i < mocThoiGianCau.length; i += 1) {
       if (giay >= mocThoiGianCau[i].bat_dau) {
@@ -463,7 +453,6 @@ const TrangDocSach = () => {
                       {cauList.map((cau, i) => (
                         <span
                           key={cau.id}
-                          data-cau-id={cau.id}
                           className={`sync-sentence ${cauDangPhat === cau.id ? 'sync-active' : ''} ${mocThoiGianCau.length > 0 ? 'sync-clickable' : ''}`}
                           onClick={() => tuaAudioToiCau(cau.id)}
                         >
