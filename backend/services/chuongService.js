@@ -1,10 +1,11 @@
 const { sql, poolPromise } = require('../config/db');
 const { catNoiDungDocThu } = require('../utils/xuLyVanBan');
 
-const taoLoi = (statusCode, message, maLoi = null) => {
+const taoLoi = (statusCode, message, maLoi = null, maSach = null) => {
     const err = new Error(message);
     err.statusCode = statusCode;
     if (maLoi) err.ma_loi = maLoi;
+    if (maSach) err.ma_sach = maSach;
     return err;
 };
 
@@ -89,7 +90,6 @@ const xoaChuong = async (ma_chuong) => {
         throw taoLoi(400, 'Chương này đã có độc giả bỏ Xu mở khóa, không thể xóa.');
     }
 
-    // Gỡ dấu vết đang đọc ở bảng TienDoDoc trước khi xóa để không vướng khóa ngoại SQL
     await pool.request()
         .input('ma_chuong', sql.Int, ma_chuong)
         .query('UPDATE TienDoDoc SET ma_chuong_dang_doc = NULL WHERE ma_chuong_dang_doc = @ma_chuong');
@@ -98,7 +98,6 @@ const xoaChuong = async (ma_chuong) => {
         .input('ma_chuong', sql.Int, ma_chuong)
         .query('DELETE FROM ChuongSach WHERE ma_chuong = @ma_chuong');
 
-    // Tự động đánh lại số thứ tự 1, 2, 3... cho các chương còn lại của sách
     await pool.request()
         .input('ma_sach', sql.Int, chuong.ma_sach)
         .query(`
@@ -111,6 +110,7 @@ const xoaChuong = async (ma_chuong) => {
             SET so_thu_tu = stt_moi
         `);
 };
+
 const capNhatGiaHangLoat = async (ma_sach, { danh_sach_ma_chuong, la_mien_phi, gia_xu }) => {
     if (!Array.isArray(danh_sach_ma_chuong) || danh_sach_ma_chuong.length === 0) {
         throw taoLoi(400, 'Vui lòng chọn ít nhất một chương để cập nhật.');
@@ -167,13 +167,13 @@ const layNoiDungChuong = async (ma_chuong, nguoiDung) => {
         .input('ma_chuong', sql.Int, ma_chuong)
         .query(`
             SELECT c.*, s.tieu_de AS ten_sach, s.anh_bia, s.loai_sach, s.hinh_thuc_ban, s.gia_tron_quyen_xu, s.kieu_doc_mac_dinh
-FROM ChuongSach c
-INNER JOIN Sach s ON c.ma_sach = s.ma_sach
-WHERE c.ma_chuong = @ma_chuong
+            FROM ChuongSach c
+            INNER JOIN Sach s ON c.ma_sach = s.ma_sach
+            WHERE c.ma_chuong = @ma_chuong
         `);
 
     const chuong = res.recordset[0];
-    if (!chuong) throw taoLoi(404, 'Không tìm thấy nội dung.');
+    if (!chuong) throw taoLoi(404, 'Không tìm thấy chương sách.');
 
     const laAdmin = nguoiDung && nguoiDung.vai_tro === 'admin';
     let laBanDocThu = false;
@@ -181,16 +181,16 @@ WHERE c.ma_chuong = @ma_chuong
     if (!laAdmin) {
         if (chuong.hinh_thuc_ban === 'MIEN_PHI') {
             if (chuong.so_thu_tu >= 4 && !nguoiDung) {
-                throw taoLoi(401, 'Vui lòng đăng nhập để tiếp tục từ phần 4.', 'CAN_DANG_NHAP');
+                throw taoLoi(401, 'Vui lòng đăng nhập để tiếp tục đọc từ Chương 4.', 'CAN_DANG_NHAP', chuong.ma_sach);
             }
         } else if (chuong.hinh_thuc_ban === 'THEO_CHUONG') {
             if (chuong.la_mien_phi) {
                 if (chuong.so_thu_tu >= 4 && !nguoiDung) {
-                    throw taoLoi(401, 'Vui lòng đăng nhập để thưởng thức phần miễn phí này.', 'CAN_DANG_NHAP');
+                    throw taoLoi(401, 'Vui lòng đăng nhập để đọc chương miễn phí này.', 'CAN_DANG_NHAP', chuong.ma_sach);
                 }
             } else {
                 if (!nguoiDung) {
-                    throw taoLoi(401, 'Vui lòng đăng nhập để mở khóa phần thu phí.', 'CAN_DANG_NHAP');
+                    throw taoLoi(401, 'Vui lòng đăng nhập để mở khóa chương thu phí.', 'CAN_DANG_NHAP', chuong.ma_sach);
                 }
                 const kiemTraMo = await pool.request()
                     .input('ma_nguoi_dung', sql.Int, nguoiDung.ma_nguoi_dung)
@@ -198,7 +198,7 @@ WHERE c.ma_chuong = @ma_chuong
                     .query('SELECT 1 FROM ChuongDaMoKhoa WHERE ma_nguoi_dung = @ma_nguoi_dung AND ma_chuong = @ma_chuong');
 
                 if (kiemTraMo.recordset.length === 0) {
-                    throw taoLoi(403, `Nội dung này cần ${chuong.gia_xu} Xu để mở khóa.`, 'CAN_MO_KHOA_CHUONG');
+                    throw taoLoi(403, `Chương này cần ${chuong.gia_xu} Xu để mở khóa.`, 'CAN_MO_KHOA_CHUONG', chuong.ma_sach);
                 }
             }
         } else if (chuong.hinh_thuc_ban === 'TRON_QUYEN') {
@@ -207,21 +207,17 @@ WHERE c.ma_chuong = @ma_chuong
                 const kiemTraMua = await pool.request()
                     .input('ma_nguoi_dung', sql.Int, nguoiDung.ma_nguoi_dung)
                     .input('ma_sach', sql.Int, chuong.ma_sach)
-                    .query('SELECT 1 FROM SachDaMua WHERE ma_nguoi_dung = @ma_nguoi_dung AND ma_sach = @ma_sach');
+                    .query('SELECT 1 FROM SachDaMua WHERE ma_sach = @ma_sach AND ma_nguoi_dung = @ma_nguoi_dung');
                 daMua = kiemTraMua.recordset.length > 0;
             }
 
             if (!daMua) {
                 if (chuong.so_thu_tu === 1) {
-                    if (chuong.noi_dung) {
-                        const ketQuaCat = catNoiDungDocThu(chuong.noi_dung, 3000);
-                        chuong.noi_dung = ketQuaCat.noiDungCat;
-                        laBanDocThu = ketQuaCat.biCat;
-                    } else {
-                        laBanDocThu = true;
-                    }
+                    const ketQuaCat = catNoiDungDocThu(chuong.noi_dung, 3000);
+                    chuong.noi_dung = ketQuaCat.noiDungCat;
+                    laBanDocThu = ketQuaCat.biCat;
                 } else {
-                    throw taoLoi(403, `Vui lòng mua trọn quyển (${chuong.gia_tron_quyen_xu} Xu) để tiếp tục.`, 'CAN_MUA_TRON_QUYEN');
+                    throw taoLoi(403, `Vui lòng mua trọn quyển (${chuong.gia_tron_quyen_xu} Xu) để đọc tiếp.`, 'CAN_MUA_TRON_QUYEN', chuong.ma_sach);
                 }
             }
         }

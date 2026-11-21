@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import axiosClient, { SERVER_URL } from '../../api/axiosClient';
 import { useAuth } from '../../context/AuthContext';
-import KhuVucBinhLuanChuong from '../../components/docGia/KhuVucBinhLuanChuong';
 import './TrangDocSach.css';
 
 const TOC_DO_PHAT = [0.75, 1, 1.25, 1.5, 2];
@@ -179,17 +178,43 @@ const TrangDocSach = () => {
   };
 
   const chuong = duLieu?.chuong;
+  const maSachQuayLai = chuong?.ma_sach || loiQuyen?.ma_sach;
+  const anhNenTap = chuong?.anh_nen || chuong?.anh_bia;
   const laSachNghe = chuong?.loai_sach === 'SACH_NOI';
   const donViHoa = laSachNghe ? 'Tập' : 'Chương';
   const donViThuong = laSachNghe ? 'tập' : 'chương';
 
+  const quayLaiTrangSach = () => {
+    if (maSachQuayLai) {
+      navigate(`/sach/${maSachQuayLai}`);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
-    <div className={`reader-room reader-theme-${nenDoc}`}>
+    <div className={`reader-room reader-theme-${nenDoc} ${anhNenTap ? 'has-custom-bg' : ''}`}>
+      {anhNenTap && (
+        <div
+          className="chapter-custom-backdrop"
+          style={{ backgroundImage: `url("${SERVER_URL}${anhNenTap}")` }}
+        />
+      )}
+
       <div className="reader-topbar">
         <div className="reader-book-meta">
-          <Link to={chuong ? `/sach/${chuong.ma_sach}` : '/'} className="control-pill">
-            <ArrowLeft size={16} /> Mục lục
-          </Link>
+          {maSachQuayLai ? (
+            <Link to={`/sach/${maSachQuayLai}`} className="control-pill">
+              <ArrowLeft size={16} /> Mục lục
+            </Link>
+          ) : (
+            <button type="button" className="control-pill" onClick={quayLaiTrangSach}>
+              <ArrowLeft size={16} /> Mục lục
+            </button>
+          )}
+
           {chuong && (
             <div>
               <div className="reader-book-title">{chuong.ten_sach}</div>
@@ -263,11 +288,33 @@ const TrangDocSach = () => {
               </button>
             )}
             {loiQuyen.ma_loi === 'CAN_MUA_TRON_QUYEN' && (
-              <Link to="/" className="btn-outline">Quay lại trang thông tin tác phẩm</Link>
+              maSachQuayLai ? (
+                <Link to={`/sach/${maSachQuayLai}`} className="btn-outline">
+                  Quay lại trang thông tin tác phẩm
+                </Link>
+              ) : (
+                <button type="button" className="btn-outline" onClick={quayLaiTrangSach}>
+                  Quay lại trang thông tin tác phẩm
+                </button>
+              )
             )}
           </div>
         ) : chuong && (
           <>
+            <div className="chapter-top-nav">
+              {duLieu.chuong_truoc ? (
+                <Link to={`/doc/${duLieu.chuong_truoc}`} className="btn-outline">
+                  <ChevronLeft size={16} /> {donViHoa} trước
+                </Link>
+              ) : <div />}
+
+              {duLieu.chuong_sau ? (
+                <Link to={`/doc/${duLieu.chuong_sau}`} className="btn-crystal">
+                  {donViHoa} sau <ChevronRight size={16} />
+                </Link>
+              ) : <div />}
+            </div>
+
             {laSachNghe ? (
               <div className="audiobook-studio-card">
                 <div className="audiobook-cover-disc">
@@ -407,8 +454,6 @@ const TrangDocSach = () => {
                 </Link>
               ) : <div />}
             </div>
-
-            <KhuVucBinhLuanChuong maChuong={chuong.ma_chuong} laSachNghe={laSachNghe} />
           </>
         )}
       </div>

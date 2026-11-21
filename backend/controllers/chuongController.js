@@ -13,6 +13,7 @@ const layNoiDungChuong = async (req, res) => {
         res.status(error.statusCode || 500).json({
             thanh_cong: false,
             ma_loi: error.ma_loi || null,
+            ma_sach: error.ma_sach || null,
             thong_bao: error.message
         });
     }
@@ -56,7 +57,7 @@ const capNhatChuong = async (req, res) => {
         });
         res.json({ thanh_cong: true, thong_bao: 'Cập nhật chương thành công!', du_lieu: duLieu });
     } catch (error) {
-        res.status(400).json({ thanh_cong: false, thong_bao: error.message });
+        res.status(error.statusCode || 400).json({ thanh_cong: false, thong_bao: error.message });
     }
 };
 
